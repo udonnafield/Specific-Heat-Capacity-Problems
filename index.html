@@ -578,7 +578,7 @@
         <button onclick="openTable()">Specific Heat Table</button>
       </div>
       <h2>Nice work.</h2>
-      <p class="lead">In the full tutorial, students will also enter <strong>c</strong>, <strong>ΔT</strong>, and then calculate <strong>q</strong>. For this first version, the guided example checks the mass step and then moves on to the full practice system.</p>
+      <p class="lead">You finished the first guided example. Next, you will work through a guided problem for <strong>c</strong>.</p>
       <div class="feedback-box feedback-success show">Awesome job! You identified the target variable and found the mass correctly.</div>
       <div class="button-row">
         <button onclick="showScreen('screen-c-intro')">Next section</button>
@@ -593,6 +593,24 @@
       <p class="lead">This next problem will show how to rearrange the equation and solve for specific heat capacity.</p>
       <div class="button-row">
         <button onclick="startGuidedCProblem()">Begin guided c problem</button>
+      </div>
+    </section>
+
+    <section id="screen-c-guided" class="screen center">
+      <div class="top-right-actions">
+        <button onclick="openTable()">Specific Heat Table</button>
+      </div>
+      <h2>Which equation should you use to solve for c?</h2>
+      <p class="question-text">A 200 g sample absorbs 1000 J of heat and warms by 5°C. What is the specific heat capacity?</p>
+      <div class="button-row" style="margin-top:32px;">
+        <button class="secondary" onclick="checkCGuided('a')">c = q / (m × ΔT)</button>
+        <button class="secondary" onclick="checkCGuided('b')">c = m / (q × ΔT)</button>
+        <button class="secondary" onclick="checkCGuided('c')">c = q × m × ΔT</button>
+        <button class="secondary" onclick="checkCGuided('d')">c = ΔT / (m × q)</button>
+      </div>
+      <div id="c-guided-feedback" class="feedback-box"></div>
+      <div class="button-row">
+        <button id="c-guided-next" class="hidden" onclick="showScreen('screen-set-choice')">Go to practice sets</button>
       </div>
     </section>
 
@@ -719,7 +737,7 @@
 
     const screenIds = [
       'screen-intro', 'screen-hover', 'screen-q-intro', 'screen-q-identify', 'screen-q-mass',
-      'screen-q-complete', 'screen-c-intro', 'screen-set-choice', 'screen-practice', 'screen-results'
+      'screen-q-complete', 'screen-c-intro', 'screen-c-guided', 'screen-set-choice', 'screen-practice', 'screen-results'
     ];
 
     const appState = {
@@ -892,8 +910,22 @@
     }
 
     function startGuidedCProblem() {
-      // In this first build, move to the practice chooser after the guided c intro.
-      showScreen('screen-set-choice');
+      hideFeedback('c-guided-feedback');
+      document.getElementById('c-guided-next').classList.add('hidden');
+      showScreen('screen-c-guided');
+    }
+
+    function checkCGuided(choice) {
+      if (choice === 'a') {
+        setFeedback('c-guided-feedback', 'feedback-success', 'Correct! To solve for c, divide q by m × ΔT.');
+        document.getElementById('c-guided-next').classList.remove('hidden');
+      } else if (choice === 'b') {
+        setFeedback('c-guided-feedback', 'feedback-error', 'That puts mass in the numerator. Try rearranging the equation again.');
+      } else if (choice === 'c') {
+        setFeedback('c-guided-feedback', 'feedback-error', 'That multiplies everything together. To solve for c, you need to divide.');
+      } else {
+        setFeedback('c-guided-feedback', 'feedback-error', 'That does not isolate c. Try again.');
+      }
     }
 
     function shuffle(array) {
