@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Specific Heat Tutorial</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --primary: #5c3db3;
+      --primary-dark: #432a87;
+      --accent: #4d84d6;
+      --accent-dark: #2f62ae;
+      --success-bg: #dff1d1;
+      --success-border: #7faf5b;
+      --error-bg: #f7d8dc;
+      --error-border: #c86a78;
+      --hint-bg: #dceafb;
+      --hint-border: #6d91c7;
+      --warning-bg: #fff2c9;
+      --warning-border: #d6ac2a;
+      --text: #17212f;
+      --muted: #5b6677;
+      --shadow: 0 8px 24px rgba(27, 39, 69, 0.12);
+      --radius: 22px;
+      --input-radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #eef5fb 0%, #f8fbfd 100%);
+      color: var(--text);
+    }
+
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .screen {
+      display: none;
+      min-height: calc(100vh - 48px);
+      background: var(--panel);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 36px 42px 34px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .screen.active { display: block; }
+
+    h1, h2, h3 {
+      margin-top: 0;
+      color: var(--primary);
+      line-height: 1.2;
+    }
+
+    h1 { font-size: 2.15rem; }
+    h2 { font-size: 1.8rem; }
+    h3 { font-size: 1.2rem; }
+
+    p {
+      font-size: 1.05rem;
+      line-height: 1.5;
+      margin: 0 0 14px;
+    }
+
+    .lead {
+      font-size: 1.15rem;
+      max-width: 900px;
+    }
+
+    .center { text-align: center; }
+
+    .equation-wrap {
+      margin: 38px 0 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .equation {
+      font-size: clamp(2.5rem, 7vw, 4.7rem);
+      font-weight: 800;
+      letter-spacing: 1px;
+      display: inline-flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .eq-clickable, .eq-hover {
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 8px 12px;
+      transition: transform 0.15s ease, background 0.15s ease;
+      position: relative;
+    }
+
+    .eq-clickable:hover, .eq-hover:hover {
+      background: #efe8ff;
+      transform: translateY(-2px);
+    }
+
+    .symbol {
+      padding: 0 2px;
+    }
+
+    .tooltip {
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 12px);
+      transform: translateX(-50%);
+      width: min(360px, 85vw);
+      background: #fff7a8;
+      border: 2px solid #d4c93d;
+      color: #222;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 1rem;
+      line-height: 1.4;
+      z-index: 10;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+      display: none;
+    }
+
+    .eq-hover:hover .tooltip,
+    .eq-hover:focus-within .tooltip { display: block; }
+
+    .button-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    button {
+      border: none;
+      border-radius: 18px;
+      background: var(--accent);
+      color: white;
+      padding: 14px 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 14px rgba(77, 132, 214, 0.22);
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-2px); background: var(--accent-dark); }
+    button.secondary { background: #e8eef8; color: #1e3565; box-shadow: none; border: 2px solid #90a9d6; }
+    button.secondary:hover { background: #dce8fb; }
+    button.success { background: #72a64f; }
+    button.success:hover { background: #5e8d41; }
+    button.hidden { display: none; }
+
+    .big-choice-grid {
+      display: grid;
+      gap: 20px;
+      max-width: 540px;
+      margin: 52px auto 0;
+    }
+
+    .choice-card {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 22px;
+      border-radius: 22px;
+      border: 3px solid #d9e4f6;
+      background: #f9fbff;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .choice-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: 0 6px 18px rgba(77, 132, 214, 0.15);
+    }
+
+    .choice-dot {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 3px solid #224c90;
+      flex-shrink: 0;
+    }
+
+    .question-text {
+      font-size: clamp(1.45rem, 2.4vw, 2.1rem);
+      line-height: 1.35;
+      font-weight: 700;
+      margin: 26px auto;
+      max-width: 1040px;
+    }
+
+    .highlight {
+      outline: 4px solid #ff4040;
+      border-radius: 10px;
+      padding: 0 3px;
+      display: inline-block;
+    }
+
+    .feedback-box {
+      margin: 24px auto 0;
+      max-width: 640px;
+      padding: 18px 20px;
+      border-radius: 18px;
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-align: center;
+      border: 3px solid transparent;
+      display: none;
+    }
+
+    .feedback-box.show { display: block; }
+    .feedback-success { background: var(--success-bg); border-color: var(--success-border); }
+    .feedback-error { background: var(--error-bg); border-color: var(--error-border); }
+    .feedback-hint { background: var(--hint-bg); border-color: var(--hint-border); }
+    .feedback-warn { background: var(--warning-bg); border-color: var(--warning-border); }
+
+    .top-right-actions {
+      position: absolute;
+      top: 34px;
+      right: 36px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .entry-grid {
+      width: min(760px, 100%);
+      margin: 22px auto 0;
+      background: #fbfdff;
+      border-radius: 24px;
+      padding: 24px 18px 18px;
+    }
+
+    .entry-grid h3 {
+      text-align: center;
+      margin-bottom: 14px;
+      color: var(--text);
+      font-size: 1.3rem;
+    }
+
+    .entry-row {
+      display: grid;
+      grid-template-columns: 110px 1fr 160px;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 14px;
+      border-radius: 18px;
+      padding: 10px 10px;
+      transition: background 0.15s ease, outline 0.15s ease;
+    }
+
+    .entry-row.active-row {
+      outline: 4px solid #f0b418;
+      background: #fffdf3;
+    }
+
+    .entry-label {
+      font-size: 2rem;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 16px 14px;
+      border-radius: var(--input-radius);
+      border: 2px solid #b9c7df;
+      font-size: 1.15rem;
+      background: #fff;
+    }
+
+    select { cursor: pointer; }
+
+    .inline-prompt {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 8px;
+      margin-bottom: 12px;
+      color: var(--primary);
+    }
+
+    .stats-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      background: #f5f8ff;
+      border: 2px solid #d8e2f3;
+      border-radius: 18px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      font-weight: 700;
+    }
+
+    .progress {
+      width: 100%;
+      height: 14px;
+      background: #dfe9f8;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 12px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #6f4fd7 0%, #4d84d6 100%);
+      transition: width 0.25s ease;
+    }
+
+    .mini-note {
+      color: var(--muted);
+      font-size: 0.98rem;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .results-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 28px;
+      align-items: start;
+      margin-top: 24px;
+    }
+
+    .results-card {
+      background: #fafcff;
+      border: 2px solid #dce6f4;
+      border-radius: 24px;
+      padding: 24px;
+    }
+
+    .results-score {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .struggle-list {
+      margin: 12px 0 0;
+      padding-left: 22px;
+    }
+
+    .struggle-list li {
+      margin-bottom: 10px;
+      font-size: 1.05rem;
+    }
+
+    .raven-image {
+      width: 100%;
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      object-fit: cover;
+      min-height: 260px;
+      background: #dbeafb;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 24, 49, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 100;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      width: min(860px, 96vw);
+      max-height: 88vh;
+      overflow: auto;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.22);
+      padding: 26px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+    }
+
+    th, td {
+      border: 2px solid #2f2f2f;
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 1rem;
+    }
+
+    th {
+      background: #f3f6fb;
+      font-size: 1.05rem;
+    }
+
+    .show-work {
+      background: #fff9e6;
+      border: 2px solid #d5b34b;
+      border-radius: 18px;
+      padding: 16px 18px;
+      margin-top: 18px;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .show-work.show { display: block; }
+
+    .badge {
+      display: inline-block;
+      background: #edf2ff;
+      color: var(--primary);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .results-layout { grid-template-columns: 1fr; }
+      .top-right-actions {
+        position: static;
+        margin-top: 12px;
+        justify-content: center;
+      }
+      .entry-row { grid-template-columns: 85px 1fr 130px; }
+      .entry-label { font-size: 1.6rem; }
+      .screen { padding: 28px 20px 24px; }
+      .question-text { font-size: 1.3rem; }
+    }
+
+    @media (max-width: 620px) {
+      .entry-row { grid-template-columns: 1fr; }
+      .entry-label { text-align: left; }
+      .stats-bar { font-size: 0.95rem; }
+      h1 { font-size: 1.75rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section id="screen-intro" class="screen active">
+      <div class="badge">Specific Heat Tutorial</div>
+      <h1>Welcome to the specific heat tutorial.</h1>
+      <p class="lead">In this activity, you will learn what each variable means in the equation <strong>q = m c ΔT</strong>, practice solving guided examples, and then work through your own problem set.</p>
+      <p class="lead">You will get feedback after each check. If you get stuck, hints will appear after your second incorrect attempt.</p>
+      <div class="equation-wrap">
+        <div class="equation">
+          <span>q</span>
+          <span class="symbol">=</span>
+          <span>m</span>
+          <span>c</span>
+          <span>ΔT</span>
+        </div>
+      </div>
+      <div class="button-row">
+        <button onclick="showScreen('screen-hover')">Start tutorial</button>
+      </div>
+    </section>
+
+    <section id="screen-hover" class="screen">
+      <h2 class="center">Let’s get to know the variables.</h2>
+      <p class="lead center">Move your cursor over each variable to learn what it means.</p>
+      <div class="equation-wrap">
+        <div class="equation" aria-label="Specific heat equation">
+          <span class="eq-hover">q
+            <span class="tooltip"><strong>q</strong> means heat energy. It is measured in <strong>joules (J)</strong>. A positive q means the system gained heat. A negative q means the system lost heat.</span>
+          </span>
+          <span class="symbol">=</span>
+          <span class="eq-hover">m
+            <span class="tooltip"><strong>m</strong> means mass. In this tutorial, mass will be measured in <strong>grams (g)</strong>.</span>
+          </span>
+          <span class="eq-hover">c
+            <span class="tooltip"><strong>c</strong> means specific heat capacity. In this tutorial, it will use units of <strong>J/g°C</strong>.</span>
+          </span>
+          <span class="eq-hover">ΔT
+            <span class="tooltip"><strong>ΔT</strong> means change in temperature. It is found by calculating <strong>final temperature − initial temperature</strong>. In this tutorial, it will use <strong>°C</strong>.</span>
+          </span>
+        </div>
+      </div>
+      <div class="button-row">
+        <button onclick="showScreen('screen-q-intro')">Next section</button>
+      </div>
+    </section>
+
+    <section id="screen-q-intro" class="screen center">
+      <h2>Let’s apply what you just learned.</h2>
+      <p class="lead">First, you will solve a guided problem for <strong>q</strong>.</p>
+      <div class="button-row">
+        <button onclick="showScreen('screen-q-identify')">Begin</button>
+      </div>
+    </section>
+
+    <section id="screen-q-identify" class="screen center">
+      <div class="top-right-actions">
+        <button onclick="openTable()">Specific Heat Table</button>
+      </div>
+      <h2>Which variable are we trying to find?</h2>
+      <div class="equation-wrap">
+        <div class="equation">
+          <span class="eq-clickable" onclick="checkQIdentify('q')">q</span>
+          <span class="symbol">=</span>
+          <span class="eq-clickable" onclick="checkQIdentify('m')">m</span>
+          <span class="eq-clickable" onclick="checkQIdentify('c')">c</span>
+          <span class="eq-clickable" onclick="checkQIdentify('dT')">ΔT</span>
+        </div>
+      </div>
+      <p class="question-text">A 500-gram piece of aluminum increases its temperature 7°C when heat energy (q) is added. How much heat energy (q) produced this change in temperature?</p>
+      <div id="q-identify-feedback" class="feedback-box"></div>
+      <div class="button-row">
+        <button id="q-identify-next" class="hidden" onclick="showScreen('screen-q-mass')">Next section</button>
+      </div>
+    </section>
+
+    <section id="screen-q-mass" class="screen">
+      <div class="top-right-actions">
+        <button onclick="openTable()">Specific Heat Table</button>
+      </div>
+      <h2>What is the mass in this problem?</h2>
+      <p class="question-text center">A 500-gram piece of aluminum increases its temperature 7°C when heat energy (q) is added. How much heat energy (q) produced this change in temperature?</p>
+      <div class="entry-grid">
+        <h3>Enter the number and unit for <strong>m</strong>.</h3>
+        <div class="entry-row active-row">
+          <div class="entry-label">m =</div>
+          <input type="text" id="q-mass-value" inputmode="decimal" autocomplete="off" />
+          <select id="q-mass-unit"></select>
+        </div>
+        <div class="entry-row">
+          <div class="entry-label">c =</div>
+          <input type="text" disabled />
+          <select disabled><option>—</option></select>
+        </div>
+        <div class="entry-row">
+          <div class="entry-label">ΔT =</div>
+          <input type="text" disabled />
+          <select disabled><option>—</option></select>
+        </div>
+      </div>
+      <div class="button-row">
+        <button onclick="checkGuidedMass()">Check</button>
+        <button id="q-mass-hint-btn" class="secondary hidden" onclick="showGuidedMassHint()">Click for a hint</button>
+        <button id="q-mass-hint2-btn" class="secondary hidden" onclick="showGuidedMassHint2()">Click for another hint</button>
+        <button id="q-mass-show-btn" class="secondary hidden" onclick="showGuidedMassWork()">Show me how</button>
+      </div>
+      <div id="q-mass-feedback" class="feedback-box"></div>
+      <div id="q-mass-show-work" class="show-work"></div>
+      <div class="button-row">
+        <button id="q-mass-next" class="hidden" onclick="showScreen('screen-q-complete')">Next section</button>
+      </div>
+    </section>
+
+    <section id="screen-q-complete" class="screen center">
+      <div class="top-right-actions">
+        <button onclick="openTable()">Specific Heat Table</button>
+      </div>
+      <h2>Nice work.</h2>
+      <p class="lead">In the full tutorial, students will also enter <strong>c</strong>, <strong>ΔT</strong>, and then calculate <strong>q</strong>. For this first version, the guided example checks the mass step and then moves on to the full practice system.</p>
+      <div class="feedback-box feedback-success show">Awesome job! You identified the target variable and found the mass correctly.</div>
+      <div class="button-row">
+        <button onclick="showScreen('screen-c-intro')">Next section</button>
+      </div>
+    </section>
+
+    <section id="screen-c-intro" class="screen center">
+      <div class="top-right-actions">
+        <button onclick="openTable()">Specific Heat Table</button>
+      </div>
+      <h2>Now let’s solve a guided problem for c.</h2>
+      <p class="lead">This next problem will show how to rearrange the equation and solve for specific heat capacity.</p>
+      <div class="button-row">
+        <button onclick="startGuidedCProblem()">Begin guided c problem</button>
+      </div>
+    </section>
+
+    <section id="screen-set-choice" class="screen center">
+      <h2>Select the number of problems you would like to work.</h2>
+      <div class="big-choice-grid">
+        <div class="choice-card" onclick="startPracticeSet(8)">
+          <div class="choice-dot"></div>
+          <div><strong style="font-size:1.9rem;">8 problems</strong></div>
+        </div>
+        <div class="choice-card" onclick="startPracticeSet(10)">
+          <div class="choice-dot"></div>
+          <div><strong style="font-size:1.9rem;">10 problems</strong></div>
+        </div>
+        <div class="choice-card" onclick="startPracticeSet(15)">
+          <div class="choice-dot"></div>
+          <div><strong style="font-size:1.9rem;">15 problems</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-practice" class="screen">
+      <div class="top-right-actions">
+        <button onclick="openTable()">Specific Heat Table</button>
+      </div>
+      <div class="stats-bar">
+        <div id="practice-progress-label">Problem 1 of 8</div>
+        <div id="practice-score-label">Correct: 0</div>
+        <div id="practice-target-label">Solve for q</div>
+      </div>
+      <div class="progress"><div id="progress-fill" class="progress-fill"></div></div>
+      <p id="practice-question" class="question-text"></p>
+      <div class="inline-prompt" id="practice-prompt">Enter your answer.</div>
+      <div class="entry-grid">
+        <h3>Answer</h3>
+        <div class="entry-row active-row">
+          <div class="entry-label" id="practice-answer-label">q =</div>
+          <input type="text" id="practice-value" inputmode="decimal" autocomplete="off" />
+          <select id="practice-unit"></select>
+        </div>
+      </div>
+      <div class="button-row">
+        <button onclick="checkPracticeAnswer()">Check</button>
+        <button id="practice-hint-1-btn" class="secondary hidden" onclick="showPracticeHint(1)">Click for a hint</button>
+        <button id="practice-hint-2-btn" class="secondary hidden" onclick="showPracticeHint(2)">Click for another hint</button>
+        <button id="practice-show-btn" class="secondary hidden" onclick="showPracticeWork()">Show me how</button>
+      </div>
+      <div id="practice-feedback" class="feedback-box"></div>
+      <div id="practice-show-work" class="show-work"></div>
+      <div class="button-row">
+        <button id="practice-next-btn" class="hidden" onclick="nextPracticeQuestion()">Next problem</button>
+      </div>
+      <div class="mini-note">Answers are checked with a ±0.5% tolerance. Sign matters. Units must match the answer type.</div>
+    </section>
+
+    <section id="screen-results" class="screen">
+      <h2>Results</h2>
+      <div class="results-layout">
+        <div class="results-card">
+          <div id="results-message" class="badge">Soar, young Raven!</div>
+          <div class="results-score" id="results-percent">100%</div>
+          <p id="results-summary" class="lead">You answered 0 out of 0 correctly.</p>
+          <h3>Variable types that gave you the most trouble</h3>
+          <ul id="results-struggles" class="struggle-list"></ul>
+          <div class="button-row" style="justify-content:flex-start; margin-top:24px;">
+            <button onclick="showScreen('screen-set-choice')">Start a new set</button>
+          </div>
+        </div>
+        <div>
+          <img class="raven-image" id="raven-image" alt="Raven mascot artwork" />
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="table-modal" class="modal-backdrop" onclick="closeTable(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+        <div>
+          <h2 style="margin-bottom:6px;">Specific Heat Table</h2>
+          <p class="mini-note" style="text-align:left; margin:0;">Units: J g<sup>−1</sup> °C<sup>−1</sup></p>
+        </div>
+        <button class="secondary" onclick="closeTable()">Close</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Material</th>
+            <th>Specific Heat Capacity</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const UNIT_OPTIONS = ['J', 'g', 'J/g°C', '°C'];
+
+    const specificHeatTable = [
+      ['Water (liquid)', 4.18],
+      ['Steam (water vapor)', 2.01],
+      ['Ice', 2.09],
+      ['Aluminum', 0.897],
+      ['Brass', 0.380],
+      ['Gold', 0.129],
+      ['Silver', 0.235],
+      ['Iron', 0.449],
+      ['Tin', 0.227],
+      ['Zinc', 0.388],
+      ['Wood', 1.70],
+      ['Glass', 0.840],
+      ['Cadmium', 0.230],
+      ['Platinum', 0.133],
+      ['Tungsten', 0.134],
+      ['Steel', 0.490],
+      ['Marble', 0.880],
+      ['Porcelain', 0.840],
+      ['Plastic', 1.50],
+      ['Quartz', 0.740]
+    ];
+
+    const materialCMap = Object.fromEntries(specificHeatTable.map(([name, c]) => [name, c]));
+
+    const screenIds = [
+      'screen-intro', 'screen-hover', 'screen-q-intro', 'screen-q-identify', 'screen-q-mass',
+      'screen-q-complete', 'screen-c-intro', 'screen-set-choice', 'screen-practice', 'screen-results'
+    ];
+
+    const appState = {
+      guidedQIdentifySolved: false,
+      guidedMassAttempts: 0,
+      practiceSet: [],
+      currentIndex: 0,
+      correctCount: 0,
+      currentAttempts: 0,
+      struggleCounts: { q: 0, m: 0, c: 0, dT: 0 },
+      currentProblem: null,
+      practiceLength: 0
+    };
+
+    function showScreen(id) {
+      screenIds.forEach(screenId => {
+        document.getElementById(screenId).classList.toggle('active', screenId === id);
+      });
+    }
+
+    function populateUnitSelect(selectId, includeBlank = true) {
+      const select = document.getElementById(selectId);
+      select.innerHTML = '';
+      if (includeBlank) {
+        const blank = document.createElement('option');
+        blank.value = '';
+        blank.textContent = 'Select unit';
+        select.appendChild(blank);
+      }
+      UNIT_OPTIONS.forEach(unit => {
+        const option = document.createElement('option');
+        option.value = unit;
+        option.textContent = unit;
+        select.appendChild(option);
+      });
+    }
+
+    function populateTable() {
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+      specificHeatTable.forEach(([material, value]) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${material}</td><td>${value}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openTable() {
+      document.getElementById('table-modal').classList.add('open');
+    }
+
+    function closeTable(event) {
+      if (!event || event.target.id === 'table-modal') {
+        document.getElementById('table-modal').classList.remove('open');
+      }
+    }
+
+    function setFeedback(id, type, message) {
+      const box = document.getElementById(id);
+      box.className = `feedback-box show ${type}`;
+      box.textContent = message;
+    }
+
+    function hideFeedback(id) {
+      const box = document.getElementById(id);
+      box.className = 'feedback-box';
+      box.textContent = '';
+    }
+
+    function parseNumber(value) {
+      if (typeof value !== 'string') return NaN;
+      const cleaned = value.replace(/,/g, '').trim();
+      if (!cleaned) return NaN;
+      return Number(cleaned);
+    }
+
+    function withinTolerance(student, correct, tolerance = 0.005) {
+      if (!Number.isFinite(student) || !Number.isFinite(correct)) return false;
+      if (correct === 0) return Math.abs(student) <= tolerance;
+      return Math.abs(student - correct) / Math.abs(correct) <= tolerance;
+    }
+
+    function variableDisplay(variable) {
+      return variable === 'dT' ? 'ΔT' : variable;
+    }
+
+    function requiredUnit(variable) {
+      if (variable === 'q') return 'J';
+      if (variable === 'm') return 'g';
+      if (variable === 'c') return 'J/g°C';
+      return '°C';
+    }
+
+    function checkQIdentify(choice) {
+      if (choice === 'q') {
+        setFeedback('q-identify-feedback', 'feedback-success', 'Awesome job! That is correct. Click next to move to the next section.');
+        document.getElementById('q-identify-next').classList.remove('hidden');
+      } else if (choice === 'm') {
+        setFeedback('q-identify-feedback', 'feedback-error', 'm stands for mass. Try again.');
+      } else if (choice === 'c') {
+        setFeedback('q-identify-feedback', 'feedback-error', 'c stands for specific heat capacity. Try again.');
+      } else {
+        setFeedback('q-identify-feedback', 'feedback-error', 'ΔT stands for change in temperature. Try again.');
+      }
+    }
+
+    function checkGuidedMass() {
+      const value = parseNumber(document.getElementById('q-mass-value').value);
+      const unit = document.getElementById('q-mass-unit').value;
+      appState.guidedMassAttempts += 1;
+
+      if (!document.getElementById('q-mass-value').value.trim()) {
+        setFeedback('q-mass-feedback', 'feedback-error', 'Please enter a value before checking.');
+        maybeShowGuidedMassSupports();
+        return;
+      }
+
+      if (!Number.isFinite(value)) {
+        setFeedback('q-mass-feedback', 'feedback-error', 'That does not look like a number. Enter a numeric value.');
+        maybeShowGuidedMassSupports();
+        return;
+      }
+
+      const correctValue = 500;
+      const correctUnit = 'g';
+
+      if (withinTolerance(value, correctValue) && unit === correctUnit) {
+        setFeedback('q-mass-feedback', 'feedback-success', 'Awesome job! That is correct. Click next to move to the next section.');
+        document.getElementById('q-mass-next').classList.remove('hidden');
+        return;
+      }
+
+      if (withinTolerance(value, 7) && unit === '°C') {
+        setFeedback('q-mass-feedback', 'feedback-error', 'You entered the change in temperature. Try again.');
+      } else if (withinTolerance(value, correctValue) && unit !== correctUnit) {
+        setFeedback('q-mass-feedback', 'feedback-error', 'Your value is correct, but the units are not. Try again.');
+      } else if (!withinTolerance(value, correctValue) && unit === correctUnit) {
+        setFeedback('q-mass-feedback', 'feedback-error', 'Your unit is correct, but the value is not. Try again.');
+      } else {
+        setFeedback('q-mass-feedback', 'feedback-error', 'Both the value and units are incorrect. Try again.');
+      }
+
+      maybeShowGuidedMassSupports();
+    }
+
+    function maybeShowGuidedMassSupports() {
+      if (appState.guidedMassAttempts >= 2) {
+        document.getElementById('q-mass-hint-btn').classList.remove('hidden');
+      }
+      if (appState.guidedMassAttempts >= 3) {
+        document.getElementById('q-mass-hint2-btn').classList.remove('hidden');
+      }
+      if (appState.guidedMassAttempts >= 4) {
+        document.getElementById('q-mass-show-btn').classList.remove('hidden');
+      }
+    }
+
+    function showGuidedMassHint() {
+      setFeedback('q-mass-feedback', 'feedback-hint', 'Hint: Look for the amount of matter given in the problem.');
+    }
+
+    function showGuidedMassHint2() {
+      setFeedback('q-mass-feedback', 'feedback-hint', 'The units for mass in this problem are grams. Look for the number attached to gram.');
+    }
+
+    function showGuidedMassWork() {
+      const box = document.getElementById('q-mass-show-work');
+      box.classList.add('show');
+      box.innerHTML = '<strong>How to find m:</strong><br>Read the problem and look for the mass. The problem says <strong>500-gram piece of aluminum</strong>.<br><br>So, <strong>m = 500 g</strong>.';
+    }
+
+    function startGuidedCProblem() {
+      // In this first build, move to the practice chooser after the guided c intro.
+      showScreen('screen-set-choice');
+    }
+
+    function shuffle(array) {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function pickByDifficulty(setSize) {
+      const byDifficulty = {
+        easy: problems.filter(p => p.difficulty === 'easy'),
+        medium: problems.filter(p => p.difficulty === 'medium'),
+        hard: problems.filter(p => p.difficulty === 'hard'),
+        advanced: problems.filter(p => p.difficulty === 'advanced')
+      };
+
+      let counts;
+      if (setSize === 8) counts = { easy: 4, medium: 2, hard: 2, advanced: 0 };
+      else if (setSize === 10) counts = { easy: 5, medium: 3, hard: 2, advanced: 0 };
+      else counts = { easy: 5, medium: 5, hard: 3, advanced: 2 };
+
+      const selected = [];
+      Object.entries(counts).forEach(([difficulty, count]) => {
+        selected.push(...shuffle(byDifficulty[difficulty]).slice(0, count));
+      });
+      return shuffle(selected);
+    }
+
+    function startPracticeSet(setSize) {
+      appState.practiceSet = pickByDifficulty(setSize);
+      appState.currentIndex = 0;
+      appState.correctCount = 0;
+      appState.currentAttempts = 0;
+      appState.practiceLength = setSize;
+      appState.struggleCounts = { q: 0, m: 0, c: 0, dT: 0 };
+      loadPracticeQuestion();
+      showScreen('screen-practice');
+    }
+
+    function resetPracticeUI() {
+      document.getElementById('practice-value').value = '';
+      document.getElementById('practice-unit').value = '';
+      document.getElementById('practice-hint-1-btn').classList.add('hidden');
+      document.getElementById('practice-hint-2-btn').classList.add('hidden');
+      document.getElementById('practice-show-btn').classList.add('hidden');
+      document.getElementById('practice-next-btn').classList.add('hidden');
+      hideFeedback('practice-feedback');
+      const work = document.getElementById('practice-show-work');
+      work.classList.remove('show');
+      work.innerHTML = '';
+    }
+
+    function loadPracticeQuestion() {
+      resetPracticeUI();
+      appState.currentAttempts = 0;
+      const problem = appState.practiceSet[appState.currentIndex];
+      appState.currentProblem = problem;
+      document.getElementById('practice-progress-label').textContent = `Problem ${appState.currentIndex + 1} of ${appState.practiceLength}`;
+      document.getElementById('practice-score-label').textContent = `Correct: ${appState.correctCount}`;
+      document.getElementById('practice-target-label').textContent = `Solve for ${variableDisplay(problem.target)}`;
+      document.getElementById('practice-question').textContent = problem.text;
+      document.getElementById('practice-prompt').textContent = `Solve for ${variableDisplay(problem.target)}.`;
+      document.getElementById('practice-answer-label').textContent = `${variableDisplay(problem.target)} =`;
+      const percent = (appState.currentIndex / appState.practiceLength) * 100;
+      document.getElementById('progress-fill').style.width = `${percent}%`;
+      document.getElementById('practice-value').focus();
+    }
+
+    function getPracticeExpectedAnswer(problem) {
+      const { target, data } = problem;
+      if (target === 'q') return { value: data.m * data.c * data.dT, unit: 'J' };
+      if (target === 'm') return { value: data.q / (data.c * data.dT), unit: 'g' };
+      if (target === 'c') return { value: data.q / (data.m * data.dT), unit: 'J/g°C' };
+      return { value: data.q / (data.m * data.c), unit: '°C' };
+    }
+
+    function classifyWrongAnswer(studentValue, studentUnit, problem, correctAnswer) {
+      const { data, target } = problem;
+      const unitMatch = studentUnit === correctAnswer.unit;
+      const expectedVars = {
+        q: data.q,
+        m: data.m,
+        c: data.c,
+        dT: data.dT
+      };
+
+      for (const [key, value] of Object.entries(expectedVars)) {
+        if (key !== target && Number.isFinite(value) && withinTolerance(studentValue, value)) {
+          return `You entered the value for ${variableDisplay(key)} instead of ${variableDisplay(target)}.`;
+        }
+      }
+
+      if (withinTolerance(Math.abs(studentValue), Math.abs(correctAnswer.value)) && Math.sign(studentValue) !== Math.sign(correctAnswer.value)) {
+        return 'Your sign is incorrect. Check whether the quantity should be positive or negative.';
+      }
+
+      if (withinTolerance(studentValue, correctAnswer.value) && !unitMatch) {
+        return 'Your value is correct, but the units are not.';
+      }
+
+      if (!withinTolerance(studentValue, correctAnswer.value) && unitMatch) {
+        return 'Your unit is correct, but the value is not.';
+      }
+
+      return 'Both the value and units are incorrect.';
+    }
+
+    function checkPracticeAnswer() {
+      const valueRaw = document.getElementById('practice-value').value;
+      const unit = document.getElementById('practice-unit').value;
+      const studentValue = parseNumber(valueRaw);
+      const problem = appState.currentProblem;
+      const expected = getPracticeExpectedAnswer(problem);
+      appState.currentAttempts += 1;
+
+      if (!valueRaw.trim()) {
+        setFeedback('practice-feedback', 'feedback-error', 'Please enter a value before checking.');
+        revealSupports();
+        return;
+      }
+
+      if (!Number.isFinite(studentValue)) {
+        setFeedback('practice-feedback', 'feedback-error', 'That does not look like a number. Enter a numeric value.');
+        revealSupports();
+        return;
+      }
+
+      if (withinTolerance(studentValue, expected.value) && unit === expected.unit) {
+        appState.correctCount += 1;
+        document.getElementById('practice-score-label').textContent = `Correct: ${appState.correctCount}`;
+        setFeedback('practice-feedback', 'feedback-success', 'Correct! Nice work.');
+        document.getElementById('practice-next-btn').classList.remove('hidden');
+        return;
+      }
+
+      appState.struggleCounts[problem.target] += 1;
+      const message = classifyWrongAnswer(studentValue, unit, problem, expected);
+      setFeedback('practice-feedback', 'feedback-error', `${message} Try again.`);
+      revealSupports();
+    }
+
+    function revealSupports() {
+      if (appState.currentAttempts >= 2) {
+        document.getElementById('practice-hint-1-btn').classList.remove('hidden');
+      }
+      if (appState.currentAttempts >= 3) {
+        document.getElementById('practice-hint-2-btn').classList.remove('hidden');
+      }
+      if (appState.currentAttempts >= 4) {
+        document.getElementById('practice-show-btn').classList.remove('hidden');
+      }
+    }
+
+    function showPracticeHint(level) {
+      const p = appState.currentProblem;
+      if (level === 1) {
+        setFeedback('practice-feedback', 'feedback-hint', p.hints[0]);
+      } else {
+        setFeedback('practice-feedback', 'feedback-hint', p.hints[1]);
+      }
+    }
+
+    function showPracticeWork() {
+      const p = appState.currentProblem;
+      const answer = getPracticeExpectedAnswer(p);
+      const box = document.getElementById('practice-show-work');
+      box.classList.add('show');
+      box.innerHTML = `<strong>Show me how:</strong><br>${p.showWork}<br><br><strong>Answer:</strong> ${variableDisplay(p.target)} = ${roundForDisplay(answer.value)} ${answer.unit}`;
+    }
+
+    function roundForDisplay(value) {
+      return Number.parseFloat(value.toFixed(6)).toString();
+    }
+
+    function nextPracticeQuestion() {
+      appState.currentIndex += 1;
+      if (appState.currentIndex >= appState.practiceSet.length) {
+        showResults();
+        return;
+      }
+      loadPracticeQuestion();
+    }
+
+    function showResults() {
+      const percent = Math.round((appState.correctCount / appState.practiceLength) * 100);
+      document.getElementById('progress-fill').style.width = '100%';
+      document.getElementById('results-percent').textContent = `${percent}%`;
+      document.getElementById('results-summary').textContent = `You answered ${appState.correctCount} out of ${appState.practiceLength} correctly.`;
+
+      let message;
+      if (percent >= 90) message = 'Soar, young Raven! Outstanding work.';
+      else if (percent >= 70) message = 'Nice work, Raven. You are getting stronger.';
+      else message = 'Keep practicing, Raven. You are building your skills.';
+      document.getElementById('results-message').textContent = message;
+
+      const sortedStruggles = Object.entries(appState.struggleCounts)
+        .filter(([, count]) => count > 0)
+        .sort((a, b) => b[1] - a[1]);
+
+      const ul = document.getElementById('results-struggles');
+      ul.innerHTML = '';
+      if (!sortedStruggles.length) {
+        const li = document.createElement('li');
+        li.textContent = 'You did not show a clear struggle pattern in this set.';
+        ul.appendChild(li);
+      } else {
+        sortedStruggles.forEach(([variable, count]) => {
+          const li = document.createElement('li');
+          li.textContent = `${variableDisplay(variable)}: ${count} missed attempt${count === 1 ? '' : 's'}`;
+          ul.appendChild(li);
+        });
+      }
+
+      showScreen('screen-results');
+    }
+
+    const problems = [
+      // EASY 15
+      {
+        difficulty: 'easy', target: 'q',
+        text: 'A 250 g piece of aluminum warms by 12°C. How much heat energy is absorbed?',
+        data: { m: 250, c: 0.897, dT: 12, q: 250 * 0.897 * 12 },
+        hints: ['Find q by multiplying m × c × ΔT.', 'Use m = 250 g, c = 0.897 J/g°C, and ΔT = 12°C.'],
+        showWork: 'Use q = m c ΔT. Substitute the values: q = 250 × 0.897 × 12.'
+      },
+      {
+        difficulty: 'easy', target: 'q',
+        text: 'A 100 g piece of brass cools by 15°C. What is q for the brass?',
+        data: { m: 100, c: 0.380, dT: -15, q: 100 * 0.380 * -15 },
+        hints: ['Cooling means ΔT is negative.', 'Use q = m c ΔT with m = 100, c = 0.380, and ΔT = -15.'],
+        showWork: 'Because the brass cools, ΔT = -15°C. So q = 100 × 0.380 × (-15).'
+      },
+      {
+        difficulty: 'easy', target: 'm',
+        text: 'A metal sample absorbs 897 J of heat. Its specific heat is 0.897 J/g°C and its temperature changes by 10°C. What is the mass?',
+        data: { q: 897, c: 0.897, dT: 10, m: 897 / (0.897 * 10) },
+        hints: ['Solve m = q / (cΔT).', 'Substitute 897 ÷ (0.897 × 10).'],
+        showWork: 'Start with q = m c ΔT. Rearrange to m = q / (c ΔT). Then calculate 897 ÷ (0.897 × 10).'
+      },
+      {
+        difficulty: 'easy', target: 'm',
+        text: 'A substance releases 188.5 J of heat. Its specific heat is 0.377 J/g°C and its temperature changes by -5°C. What is the mass?',
+        data: { q: -188.5, c: 0.377, dT: -5, m: -188.5 / (0.377 * -5) },
+        hints: ['Both q and ΔT are negative for cooling here.', 'Use m = q / (cΔT).'],
+        showWork: 'Use m = q / (cΔT). Substitute m = -188.5 ÷ (0.377 × -5).'
+      },
+      {
+        difficulty: 'easy', target: 'c',
+        text: 'A 200 g sample absorbs 1000 J of heat and warms by 5°C. What is the specific heat capacity?',
+        data: { m: 200, q: 1000, dT: 5, c: 1000 / (200 * 5) },
+        hints: ['Solve c = q / (mΔT).', 'Substitute 1000 ÷ (200 × 5).'],
+        showWork: 'Rearrange q = m c ΔT to c = q / (m ΔT). Then calculate 1000 ÷ (200 × 5).'
+      },
+      {
+        difficulty: 'easy', target: 'c',
+        text: 'A 50 g sample loses 200 J of heat and cools by 8°C. What is the specific heat capacity?',
+        data: { m: 50, q: -200, dT: -8, c: -200 / (50 * -8) },
+        hints: ['If the sample cools, ΔT is negative.', 'Use c = q / (mΔT).'],
+        showWork: 'Because the sample cools, ΔT = -8°C. Use c = -200 ÷ (50 × -8).'
+      },
+      {
+        difficulty: 'easy', target: 'dT',
+        text: 'A 100 g sample with c = 0.500 J/g°C absorbs 250 J. What is the temperature change?',
+        data: { q: 250, m: 100, c: 0.500, dT: 250 / (100 * 0.500) },
+        hints: ['Solve ΔT = q / (mc).', 'Substitute 250 ÷ (100 × 0.500).'],
+        showWork: 'Rearrange to ΔT = q / (m c). Then calculate 250 ÷ (100 × 0.500).'
+      },
+      {
+        difficulty: 'easy', target: 'dT',
+        text: 'A 25 g sample with c = 2.00 J/g°C releases 100 J. What is the temperature change?',
+        data: { q: -100, m: 25, c: 2.00, dT: -100 / (25 * 2.00) },
+        hints: ['Releasing heat means q is negative.', 'Use ΔT = q / (mc).'],
+        showWork: 'Because heat is released, q = -100 J. So ΔT = -100 ÷ (25 × 2.00).'
+      },
+      {
+        difficulty: 'easy', target: 'q',
+        text: 'A 60 g piece of zinc warms by 20°C. How much heat energy is absorbed?',
+        data: { m: 60, c: 0.388, dT: 20, q: 60 * 0.388 * 20 },
+        hints: ['Use q = m c ΔT.', 'Multiply 60 × 0.388 × 20.'],
+        showWork: 'Substitute into q = m c ΔT: q = 60 × 0.388 × 20.'
+      },
+      {
+        difficulty: 'easy', target: 'q',
+        text: 'A 40 g piece of silver cools by 25°C. What is q?',
+        data: { m: 40, c: 0.235, dT: -25, q: 40 * 0.235 * -25 },
+        hints: ['Cooling means a negative temperature change.', 'Multiply 40 × 0.235 × (-25).'],
+        showWork: 'Since the silver cools, ΔT = -25°C. Then q = 40 × 0.235 × (-25).'
+      },
+      {
+        difficulty: 'easy', target: 'm',
+        text: 'A sample absorbs 441 J. Its specific heat is 0.490 J/g°C and its temperature changes by 9°C. What is the mass?',
+        data: { q: 441, c: 0.490, dT: 9, m: 441 / (0.490 * 9) },
+        hints: ['Use m = q / (cΔT).', 'Substitute 441 ÷ (0.490 × 9).'],
+        showWork: 'Rearrange to m = q / (c ΔT). Then calculate 441 ÷ (0.490 × 9).'
+      },
+      {
+        difficulty: 'easy', target: 'c',
+        text: 'A 75 g sample absorbs 157.5 J and warms by 3°C. What is c?',
+        data: { m: 75, q: 157.5, dT: 3, c: 157.5 / (75 * 3) },
+        hints: ['Use c = q / (mΔT).', 'Substitute 157.5 ÷ (75 × 3).'],
+        showWork: 'Rearrange to c = q / (m ΔT). Then calculate 157.5 ÷ (75 × 3).'
+      },
+      {
+        difficulty: 'easy', target: 'dT',
+        text: 'A 300 g sample with c = 0.840 J/g°C absorbs 1260 J. What is ΔT?',
+        data: { q: 1260, m: 300, c: 0.840, dT: 1260 / (300 * 0.840) },
+        hints: ['Use ΔT = q / (mc).', 'Substitute 1260 ÷ (300 × 0.840).'],
+        showWork: 'Rearrange to ΔT = q / (m c). Then calculate 1260 ÷ (300 × 0.840).'
+      },
+      {
+        difficulty: 'easy', target: 'm',
+        text: 'A sample releases 134 J. Its specific heat is 0.134 J/g°C and its temperature changes by -10°C. What is the mass?',
+        data: { q: -134, c: 0.134, dT: -10, m: -134 / (0.134 * -10) },
+        hints: ['Use m = q / (cΔT).', 'The negatives cancel in this problem.'],
+        showWork: 'Substitute into m = q / (cΔT): m = -134 ÷ (0.134 × -10).'
+      },
+      {
+        difficulty: 'easy', target: 'q',
+        text: 'A 120 g piece of glass warms by 6°C. How much heat energy is absorbed?',
+        data: { m: 120, c: 0.840, dT: 6, q: 120 * 0.840 * 6 },
+        hints: ['Use q = m c ΔT.', 'Multiply 120 × 0.840 × 6.'],
+        showWork: 'Substitute q = 120 × 0.840 × 6.'
+      },
+
+      // MEDIUM 10
+      {
+        difficulty: 'medium', target: 'dT',
+        text: 'A 50 g sample with c = 0.380 J/g°C absorbs 95 J. The sample starts at 22°C. What is the change in temperature?',
+        data: { q: 95, m: 50, c: 0.380, dT: 95 / (50 * 0.380) },
+        hints: ['The question asks for change in temperature, not final temperature.', 'Use ΔT = q / (mc).'],
+        showWork: 'Compute ΔT directly: ΔT = 95 ÷ (50 × 0.380).'
+      },
+      {
+        difficulty: 'medium', target: 'q',
+        text: 'A 175 g piece of iron changes from 18°C to 33°C. How much heat is absorbed?',
+        data: { m: 175, c: 0.449, dT: 33 - 18, q: 175 * 0.449 * (33 - 18) },
+        hints: ['First find ΔT = final temperature − initial temperature.', 'Then use q = m c ΔT.'],
+        showWork: 'Find ΔT = 33 − 18 = 15°C. Then q = 175 × 0.449 × 15.'
+      },
+      {
+        difficulty: 'medium', target: 'q',
+        text: 'A 90 g sample of plastic changes from 40°C to 28°C. What is q?',
+        data: { m: 90, c: 1.50, dT: 28 - 40, q: 90 * 1.50 * (28 - 40) },
+        hints: ['The sample cools, so ΔT should be negative.', 'Find ΔT first, then multiply m × c × ΔT.'],
+        showWork: 'ΔT = 28 − 40 = -12°C. Then q = 90 × 1.50 × (-12).'
+      },
+      {
+        difficulty: 'medium', target: 'm',
+        text: 'A sample of marble absorbs 792 J and warms from 20°C to 26°C. The specific heat of marble is 0.880 J/g°C. What is the mass?',
+        data: { q: 792, c: 0.880, dT: 6, m: 792 / (0.880 * 6) },
+        hints: ['Find ΔT first if needed.', 'Then use m = q / (cΔT).'],
+        showWork: 'ΔT = 26 − 20 = 6°C. Then m = 792 ÷ (0.880 × 6).'
+      },
+      {
+        difficulty: 'medium', target: 'c',
+        text: 'A 110 g metal sample releases 444.4 J as its temperature falls from 42°C to 33°C. What is the specific heat capacity?',
+        data: { m: 110, q: -444.4, dT: 33 - 42, c: -444.4 / (110 * (33 - 42)) },
+        hints: ['A temperature drop means ΔT is negative.', 'Use c = q / (mΔT).'],
+        showWork: 'ΔT = 33 − 42 = -9°C. Then c = -444.4 ÷ (110 × -9).'
+      },
+      {
+        difficulty: 'medium', target: 'dT',
+        text: 'A 250 g sample of wood releases 425 J. The specific heat of wood is 1.70 J/g°C. What is the temperature change?',
+        data: { q: -425, m: 250, c: 1.70, dT: -425 / (250 * 1.70) },
+        hints: ['Because heat is released, q is negative.', 'Use ΔT = q / (mc).'],
+        showWork: 'Substitute into ΔT = q / (m c): ΔT = -425 ÷ (250 × 1.70).'
+      },
+      {
+        difficulty: 'medium', target: 'c',
+        text: 'A 150 g sample absorbs 567 J and its temperature increases from 19°C to 25°C. What is c?',
+        data: { m: 150, q: 567, dT: 6, c: 567 / (150 * 6) },
+        hints: ['Find ΔT from final − initial.', 'Then solve c = q / (mΔT).'],
+        showWork: 'ΔT = 25 − 19 = 6°C. Then c = 567 ÷ (150 × 6).'
+      },
+      {
+        difficulty: 'medium', target: 'm',
+        text: 'A sample of quartz releases 222 J as it cools from 31°C to 25°C. The specific heat of quartz is 0.740 J/g°C. What is the mass?',
+        data: { q: -222, c: 0.740, dT: 25 - 31, m: -222 / (0.740 * (25 - 31)) },
+        hints: ['Calculate ΔT first.', 'Then use m = q / (cΔT).'],
+        showWork: 'ΔT = 25 − 31 = -6°C. Then m = -222 ÷ (0.740 × -6).'
+      },
+      {
+        difficulty: 'medium', target: 'q',
+        text: 'A 300 g sample of water warms from 24°C to 30°C. How much heat is absorbed?',
+        data: { m: 300, c: 4.18, dT: 6, q: 300 * 4.18 * 6 },
+        hints: ['Use liquid water from the table.', 'Find ΔT first, then multiply.'],
+        showWork: 'ΔT = 30 − 24 = 6°C. Then q = 300 × 4.18 × 6.'
+      },
+      {
+        difficulty: 'medium', target: 'dT',
+        text: 'A 45 g gold sample absorbs 34.83 J. The specific heat of gold is 0.129 J/g°C. What is the temperature change?',
+        data: { q: 34.83, m: 45, c: 0.129, dT: 34.83 / (45 * 0.129) },
+        hints: ['Use ΔT = q / (mc).', 'Substitute 34.83 ÷ (45 × 0.129).'],
+        showWork: 'Compute ΔT = 34.83 ÷ (45 × 0.129).'
+      },
+
+      // HARD 6
+      {
+        difficulty: 'hard', target: 'dT',
+        text: 'A 125 g aluminum sample absorbs 448.5 J. The sample starts at 18°C. What is the temperature change?',
+        data: { q: 448.5, m: 125, c: 0.897, dT: 448.5 / (125 * 0.897) },
+        hints: ['The question asks for ΔT, not the final temperature.', 'Use ΔT = q / (mc).'],
+        showWork: 'Substitute into ΔT = q / (m c): ΔT = 448.5 ÷ (125 × 0.897).'
+      },
+      {
+        difficulty: 'hard', target: 'c',
+        text: 'A 220 g sample absorbs 1452 J and warms from -5°C to 10°C. What is the specific heat capacity?',
+        data: { m: 220, q: 1452, dT: 15, c: 1452 / (220 * 15) },
+        hints: ['Even with a negative starting temperature, use final − initial.', 'Then solve c = q / (mΔT).'],
+        showWork: 'ΔT = 10 − (-5) = 15°C. Then c = 1452 ÷ (220 × 15).'
+      },
+      {
+        difficulty: 'hard', target: 'm',
+        text: 'A glass sample releases 806.4 J and cools from 48°C to 40°C. The specific heat of glass is 0.840 J/g°C. What is the mass?',
+        data: { q: -806.4, c: 0.840, dT: -8, m: -806.4 / (0.840 * -8) },
+        hints: ['Cooling means both q and ΔT are negative.', 'Use m = q / (cΔT).'],
+        showWork: 'ΔT = 40 − 48 = -8°C. Then m = -806.4 ÷ (0.840 × -8).'
+      },
+      {
+        difficulty: 'hard', target: 'q',
+        text: 'A 185 g sample of steam cools from 120°C to 98°C. How much heat energy is released?',
+        data: { m: 185, c: 2.01, dT: 98 - 120, q: 185 * 2.01 * (98 - 120) },
+        hints: ['Use steam, not liquid water.', 'Find ΔT first. It should be negative.'],
+        showWork: 'ΔT = 98 − 120 = -22°C. Then q = 185 × 2.01 × (-22).'
+      },
+      {
+        difficulty: 'hard', target: 'dT',
+        text: 'A 310 g steel sample releases 1519 J. The specific heat of steel is 0.490 J/g°C. What is the temperature change?',
+        data: { q: -1519, m: 310, c: 0.490, dT: -1519 / (310 * 0.490) },
+        hints: ['Use ΔT = q / (mc).', 'If q is negative, ΔT should also be negative here.'],
+        showWork: 'Substitute into ΔT = q / (m c): ΔT = -1519 ÷ (310 × 0.490).'
+      },
+      {
+        difficulty: 'hard', target: 'c',
+        text: 'A 95 g sample releases 213.75 J as its temperature changes from 30°C to 15°C. What is c?',
+        data: { m: 95, q: -213.75, dT: 15 - 30, c: -213.75 / (95 * (15 - 30)) },
+        hints: ['Calculate ΔT first.', 'Use c = q / (mΔT).'],
+        showWork: 'ΔT = 15 − 30 = -15°C. Then c = -213.75 ÷ (95 × -15).'
+      },
+
+      // ADVANCED 2
+      {
+        difficulty: 'advanced', target: 'dT',
+        text: 'A 180 g sample of ice absorbs -564.3 J? Decide whether that sign makes physical sense if the ice is warming. Then solve for the temperature change using c = 2.09 J/g°C.',
+        data: { q: 564.3, m: 180, c: 2.09, dT: 564.3 / (180 * 2.09) },
+        hints: ['If the sample is warming, q should be positive.', 'After correcting the sign idea, use ΔT = q / (mc).'],
+        showWork: 'A warming sample absorbs heat, so q should be positive. Use ΔT = 564.3 ÷ (180 × 2.09).'
+      },
+      {
+        difficulty: 'advanced', target: 'c',
+        text: 'A 250 g sample cools from 65°C to 20°C and releases 1687.5 J of heat. What is the specific heat capacity? Be careful with signs.',
+        data: { m: 250, q: -1687.5, dT: 20 - 65, c: -1687.5 / (250 * (20 - 65)) },
+        hints: ['Find ΔT using final − initial. It should be negative.', 'Then use c = q / (mΔT). A negative divided by a negative gives a positive c.'],
+        showWork: 'ΔT = 20 − 65 = -45°C. Then c = -1687.5 ÷ (250 × -45).'
+      }
+    ];
+
+    function seedRavenImage() {
+      // Replace this data with your uploaded raven image file path when you move the project into GitHub.
+      // Example: document.getElementById('raven-image').src = 'raven.png';
+      document.getElementById('raven-image').src = '28117ff9-df08-47d4-a4a9-a7c3e32dfc5a.png';
+    }
+
+    function init() {
+      populateTable();
+      populateUnitSelect('q-mass-unit');
+      populateUnitSelect('practice-unit');
+      seedRavenImage();
+    }
+
+    init();
+  </script>
+</body>
+</html>
